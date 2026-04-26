@@ -1,6 +1,7 @@
 use ark_bls12_381::{Fr, G1Affine, G1Projective, G2Affine, G2Projective};
 use ark_ec::{CurveGroup, VariableBaseMSM};
 use ark_ff::{One, Zero};
+use ark_poly::domain::{EvaluationDomain, Radix2EvaluationDomain};
 
 use crate::error::Error;
 use crate::params::PublicParams;
@@ -50,7 +51,7 @@ pub fn commit(params: &PublicParams, messages: &[Fr], a: &Fr, group: CommitGroup
         });
     }
 
-    let coeffs = roots_to_coeffs(messages);
+    let coeffs = roots_to_coeffs_ntt(messages);
 
     match group {
         CommitGroup::G1 => {
@@ -108,7 +109,7 @@ pub fn open(
         hid_messages.push(*aux);
     }
 
-    let hid_coeffs = roots_to_coeffs(&hid_messages);
+    let hid_coeffs = roots_to_coeffs_ntt(&hid_messages);
     let bases = g1_bases(hid_messages.len(), params);
     let c_hid_point = G1Projective::msm(&bases, &hid_coeffs)
         .map_err(|_| Error::MsmFailed)?;
@@ -139,6 +140,47 @@ pub fn roots_to_coeffs(roots: &[Fr]) -> Vec<Fr> {
     coeffs
 }
 
+/// O(k log² k) version of `roots_to_coeffs` by using subproduct trees of the roots with NTT-based
+/// polynomial multiplication.
+///
+/// At each level of the tree two half-sized polynomials are multiplied via NTT
+/// (O(k log k)), giving a total of O(k log² k) over the O(log k) levels.
+///
+/// Prefer this over `roots_to_coeffs` for larger numbers of roots.
+pub fn roots_to_coeffs_ntt(roots: &[Fr]) -> Vec<Fr> {
+    match roots.len() {
+        0 => vec![Fr::one()],
+        1 => vec![-roots[0], Fr::one()],
+        _ => {
+            let mid = roots.len() / 2;
+            let left = roots_to_coeffs_ntt(&roots[..mid]);
+            let right = roots_to_coeffs_ntt(&roots[mid..]);
+            ntt_poly_mul(&left, &right)
+        }
+    }
+}
+
+/// Multiply two polynomials (given as coefficient vectors) using NTT in O(k log k).
+fn ntt_poly_mul(a: &[Fr], b: &[Fr]) -> Vec<Fr> {
+    let result_len = a.len() + b.len() - 1;
+    let domain_size = result_len.next_power_of_two();
+    let domain = Radix2EvaluationDomain::<Fr>::new(domain_size)
+        .expect("Fr supports NTT up to 2^32");
+
+    let mut a_ext = a.to_vec();
+    a_ext.resize(domain_size, Fr::zero());
+    let mut b_ext = b.to_vec();
+    b_ext.resize(domain_size, Fr::zero());
+
+    domain.fft_in_place(&mut a_ext);
+    domain.fft_in_place(&mut b_ext);
+
+    let mut product: Vec<Fr> = a_ext.into_iter().zip(b_ext).map(|(x, y)| x * y).collect();
+    domain.ifft_in_place(&mut product);
+    product.truncate(result_len);
+    product
+}
+
 /// Build [h1, h1_tau[0], ..., h1_tau[degree-1]].
 fn h1_bases(degree: usize, params: &PublicParams) -> Vec<G1Affine> {
     std::iter::once(params.h1)
@@ -158,6 +200,25 @@ fn g1_bases(degree: usize, params: &PublicParams) -> Vec<G1Affine> {
     std::iter::once(params.g1)
         .chain(params.g1_tau[..degree].iter().copied())
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ark_ff::UniformRand;
+
+    #[test]
+    fn roots_to_coeffs_ntt_matches_naive() {
+        let mut rng = ark_std::test_rng();
+        for k in [0, 1, 2, 7, 16, 63, 128] {
+            let roots: Vec<Fr> = (0..k).map(|_| Fr::rand(&mut rng)).collect();
+            assert_eq!(
+                roots_to_coeffs(&roots),
+                roots_to_coeffs_ntt(&roots),
+                "mismatch at k={k}"
+            );
+        }
+    }
 }
 
 
