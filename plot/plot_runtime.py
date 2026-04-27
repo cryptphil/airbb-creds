@@ -42,7 +42,7 @@ def update_runtimes_from_criterion():
     print(f"updated {MEASUREMENT_FILE}")
 
 
-COLOR_PALETTE = ['#88CCEE', '#CC6677', '#DDCC77', '#117733', '#332288', '#AA4499', '#44AA99', '#999933']
+COLOR_PALETTE = ['#88CCEE','#CC6677','#DDCC77','#117733', '#332288','#AA4499','#44AA99', '#999933']
 COLOR_AIRBB = '#88CCEE'  # blue  — our scheme
 COLOR_BBS   = '#CC6677'  # red   — BBS
 
@@ -86,10 +86,10 @@ def plot_signing():
     set_plot_theme()
     fig, ax = plt.subplots()
 
-    _plot_line(ax, airbb_signing, COLOR_AIRBB, '-',  r'\textsc{AirBB} sign')
-    _plot_line(ax, airbb_blind,   COLOR_AIRBB, '--', r'\textsc{AirBB} blind sign')
-    _plot_line(ax, bbs_signing,   COLOR_BBS,   '-',  r'\textsc{BBS} sign')
-    _plot_line(ax, bbs_blind,     COLOR_BBS,   '--', r'\textsc{BBS} blind sign')
+    _plot_line(ax, airbb_signing, COLOR_AIRBB, '-',  r'\textsc{AirBB} issuance')
+    _plot_line(ax, airbb_blind,   COLOR_AIRBB, '--', r'\textsc{AirBB} blind issuance')
+    _plot_line(ax, bbs_signing,   COLOR_BBS,   '-',  r'\textsc{BBS} issuance')
+    _plot_line(ax, bbs_blind,     COLOR_BBS,   '--', r'\textsc{BBS} blind issuance')
 
     ax.set_xlabel('Number of attributes')
     ax.set_ylabel('Time (ms)')
@@ -135,6 +135,6 @@ def plot_presenting():
 # ---------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    update_runtimes_from_criterion()
-    # plot_signing()
-    # plot_presenting()
+    # update_runtimes_from_criterion()
+    plot_signing()
+    plot_presenting()
