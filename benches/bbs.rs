@@ -1,12 +1,13 @@
-use ark_bls12_381::{Bls12_381, Fr};
-use ark_ff::UniformRand;
+use ark_bls12_381_v4::{Bls12_381, Fr};
+use ark_ff_v4::UniformRand;
 use bbs_plus::proof_23::PoKOfSignature23G1Protocol;
 use bbs_plus::setup::{KeypairG2, SignatureParams23G1};
 use bbs_plus::signature_23::Signature23G1;
-use criterion::{black_box, criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion, Throughput};
 use dock_crypto_utils::signature::MessageOrBlinding;
 use rand::Rng;
 use std::collections::BTreeMap;
+use std::hint::black_box;
 
 type E = Bls12_381;
 

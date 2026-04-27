@@ -48,10 +48,13 @@ dependencies = [
 name = "airbnb_creds"
 version = "0.1.0"
 dependencies = [
- "ark-bls12-381",
+ "ark-bls12-381 0.4.0",
+ "ark-bls12-381 0.6.0",
  "ark-ec 0.6.0",
+ "ark-ff 0.4.2",
  "ark-ff 0.6.0",
  "ark-serialize 0.6.0",
+ "ark-std 0.4.0",
  "ark-std 0.6.0",
  "bbs_plus",
  "criterion",
@@ -87,6 +90,18 @@ name = "anstyle"
 version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "940b3a0ca603d1eade50a4846a2afffd5ef57a9feac2c0e2ec2e14f9ead76000"
+
+[[package]]
+name = "ark-bls12-381"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c775f0d12169cba7aae4caeb547bb6a50781c7449a8aa53793827c9ec4abf488"
+dependencies = [
+ "ark-ec 0.4.2",
+ "ark-ff 0.4.2",
+ "ark-serialize 0.4.2",
+ "ark-std 0.4.0",
+]
 
 [[package]]
 name = "ark-bls12-381"

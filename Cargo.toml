@@ -18,6 +18,10 @@ ark-std = { version = "0.6.0", features = ["std"] }
 criterion = { version = "0.8.2", features = ["html_reports"] }
 bbs_plus = "0.25.0"
 dock_crypto_utils = "0.23.0"
+# bbs_plus 0.25.0 depends on ark-ec 0.4
+ark-bls12-381-v4 = { package = "ark-bls12-381", version = "0.4" }
+ark-ff-v4 = { package = "ark-ff", version = "0.4" }
+ark-std-v4 = { package = "ark-std", version = "0.4" }
 
 [[bench]]
 name = "signing"

@@ -4,8 +4,9 @@ use airbnb_creds::signature::sign;
 use airbnb_creds::PublicParams;
 use ark_bls12_381::Fr;
 use ark_std::UniformRand;
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use rand::Rng;
+use std::hint::black_box;
 
 const NUM_ATTR: &[usize] = &[1, 2, 10, 25, 50, 100];
 
