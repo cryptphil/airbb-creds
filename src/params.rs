@@ -1,5 +1,5 @@
 use ark_bls12_381::{Fr, G1Affine, G1Projective, G2Affine, G2Projective};
-use ark_ec::{CurveGroup, PrimeGroup};
+use ark_ec::{CurveGroup, Group};
 use ark_ff::Field;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::UniformRand;
