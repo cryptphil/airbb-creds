@@ -4,6 +4,44 @@ import numpy as np
 import os
 
 MEASUREMENT_FILE = "runtimes.json"
+CRITERION_DIR = "../target/criterion"
+
+# Maps criterion group name -> (scheme, group) in runtimes.json
+CRITERION_GROUPS = {
+    "signing":          ("airbb", "signing"),
+    "blind_signing":    ("airbb", "blind_signing"),
+    "present":          ("airbb", "present"),
+    "verify_present":   ("airbb", "verify_present"),
+    "bbs_signing":      ("bbs",   "signing"),
+    "bbs_blind_signing":("bbs",   "blind_signing"),
+    "bbs_present":      ("bbs",   "present"),
+    "bbs_verify_present":("bbs",  "verify_present"),
+}
+
+def update_runtimes_from_criterion():
+    with open(MEASUREMENT_FILE) as f:
+        data = json.load(f)
+
+    for crit_group, (scheme, group) in CRITERION_GROUPS.items():
+        group_dir = os.path.join(CRITERION_DIR, crit_group)
+        if not os.path.isdir(group_dir):
+            print(f"skipping {crit_group}: no criterion data found")
+            continue
+        for attr in os.listdir(group_dir):
+            estimates_path = os.path.join(group_dir, attr, "new", "estimates.json")
+            if not os.path.isfile(estimates_path):
+                continue
+            with open(estimates_path) as f:
+                est = json.load(f)
+            ns = est["mean"]["point_estimate"]
+            ms = round(ns / 1_000_000, 3)
+            data[scheme][group][attr] = ms
+
+    with open(MEASUREMENT_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+    print(f"updated {MEASUREMENT_FILE}")
+
+
 COLOR_PALETTE = ['#88CCEE', '#CC6677', '#DDCC77', '#117733', '#332288', '#AA4499', '#44AA99', '#999933']
 COLOR_AIRBB = '#88CCEE'  # blue  — our scheme
 COLOR_BBS   = '#CC6677'  # red   — BBS
@@ -97,5 +135,6 @@ def plot_presenting():
 # ---------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    plot_signing()
-    plot_presenting()
+    update_runtimes_from_criterion()
+    # plot_signing()
+    # plot_presenting()
