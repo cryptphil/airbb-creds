@@ -1,11 +1,13 @@
-use ark_bls12_381::{Bls12_381, Fr};
+use ark_bls12_381::{Bls12_381, Fr, G1Affine};
 use ark_ff::UniformRand;
+use ark_serialize::CanonicalSerialize;
 use bbs_plus::proof_23::PoKOfSignature23G1Protocol;
 use bbs_plus::setup::{KeypairG2, SignatureParams23G1};
 use bbs_plus::signature_23::Signature23G1;
 use criterion::{criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion, Throughput};
 use dock_crypto_utils::signature::MessageOrBlinding;
 use rand::Rng;
+use schnorr_pok::{compute_random_oracle_challenge, SchnorrCommitment, SchnorrResponse};
 use std::collections::BTreeMap;
 use std::hint::black_box;
 
@@ -42,7 +44,8 @@ fn bench_sign(c: &mut Criterion) {
     group.finish();
 }
 
-// Blind signing while revealing half of the attributes.
+// Blind signing while revealing half of the attributes and letting the signer verify the user's
+// knowledge of all messages in the commitment using a Schnorr PoK.
 fn bench_blind_sign(c: &mut Criterion) {
     let mut group = c.benchmark_group("bbs/blind_signing");
     let mut rng = ark_std::test_rng();
@@ -52,31 +55,35 @@ fn bench_blind_sign(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::from_parameter(l), &l, |b, &l| {
             let setup = setup(l, &mut rng);
 
-            // Split messages to first half hidden (i.e., committed), second half known to signer.
-            let hidden_count = l / 2;
-            // Contains a vector of index-message pairs for the hidden messages.
-            let hidden: Vec<(usize, &Fr)> = setup.messages[..hidden_count]
-                .iter()
-                .enumerate()
-                .collect();
+            // First half hidden (committed), second half revealed to signer.
+            let hidden_count = (l / 2).min(l - 1);
+            let hidden_msgs: Vec<Fr> = setup.messages[..hidden_count].to_vec();
+            // Bases for the hidden messages: params.h[0..hidden_count]
+            let hidden_bases: Vec<G1Affine> = setup.params.h[..hidden_count].to_vec();
+            let hidden_pairs: Vec<(usize, &Fr)> = hidden_msgs.iter().enumerate().collect();
             let commitment = setup.params
-                .commit_to_messages(hidden)
+                .commit_to_messages(hidden_pairs)
                 .expect("commit failed");
-            // Expects the revealed messages as an ordered map of index-message pairs.
             let revealed: BTreeMap<usize, &Fr> = setup.messages[hidden_count..]
                 .iter()
                 .enumerate()
                 .map(|(i, m)| (hidden_count + i, m))
                 .collect();
 
+            let pok = commitment_pok(&hidden_bases, &hidden_msgs, &commitment, &mut rng);
+
             b.iter(|| {
+                // First verify knowledge of the committed messages and then sign the commitment.
+                pok.response
+                    .is_valid(&hidden_bases, black_box(&commitment), &pok.rand_com, &pok.challenge)
+                    .expect("Commitment PoK verification failed");
                 Signature23G1::<E>::new_with_committed_messages(
                     &mut rng,
                     black_box(&commitment),
                     black_box(revealed.clone()),
                     black_box(&setup.keypair.secret_key),
                     black_box(&setup.params),
-                ).expect("blind_sign failed");
+                ).expect("blind_sign failed")
             });
         });
     }
@@ -164,6 +171,30 @@ fn bench_verify_present(c: &mut Criterion) {
         });
     }
     group.finish();
+}
+
+
+struct CommitmentPoK {
+    rand_com: G1Affine,
+    challenge: Fr,
+    response: SchnorrResponse<G1Affine>,
+}
+
+// Computes a PoK of the committed messages using a Schnorr DLOG proof with SHA256.
+fn commitment_pok(
+    bases: &[G1Affine],
+    messages: &[Fr],
+    commitment: &G1Affine,
+    rng: &mut impl Rng,
+) -> CommitmentPoK {
+    let blindings: Vec<Fr> = (0..bases.len()).map(|_| Fr::rand(rng)).collect();
+    let sc_comm = SchnorrCommitment::new(bases, blindings);
+    let mut bytes = Vec::new();
+    commitment.serialize_compressed(&mut bytes).unwrap();
+    sc_comm.t.serialize_compressed(&mut bytes).unwrap();
+    let challenge = compute_random_oracle_challenge::<Fr, sha2::Sha256>(&bytes);
+    let response = sc_comm.response(messages, &challenge).unwrap();
+    CommitmentPoK { rand_com: sc_comm.t, challenge, response }
 }
 
 fn setup(l: usize, rng: &mut impl Rng) -> BenchSetup {

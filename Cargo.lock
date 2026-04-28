@@ -57,6 +57,7 @@ dependencies = [
  "criterion",
  "dock_crypto_utils",
  "rand",
+ "schnorr_pok",
  "sha2",
  "thiserror",
  "zeroize",
