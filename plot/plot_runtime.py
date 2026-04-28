@@ -135,6 +135,6 @@ def plot_presenting():
 # ---------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    # update_runtimes_from_criterion()
+    update_runtimes_from_criterion()
     plot_signing()
     plot_presenting()
