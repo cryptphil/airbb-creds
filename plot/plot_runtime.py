@@ -101,7 +101,7 @@ def plot_signing():
     ax.grid(True, which='both', linestyle=':', linewidth=0.5, alpha=0.7)
 
     fig.tight_layout()
-    out = os.path.join(os.path.dirname(__file__), 'signing.pdf')
+    out = os.path.join(os.path.dirname(__file__), 'issuance.pdf')
     fig.savefig(out)
 
 def plot_presenting():
@@ -128,13 +128,13 @@ def plot_presenting():
     ax.grid(True, which='both', linestyle=':', linewidth=0.5, alpha=0.7)
 
     fig.tight_layout()
-    out = os.path.join(os.path.dirname(__file__), 'presenting.pdf')
+    out = os.path.join(os.path.dirname(__file__), 'presentation.pdf')
     fig.savefig(out)
 
 
 # ---------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    update_runtimes_from_criterion()
+    # update_runtimes_from_criterion()
     plot_signing()
     plot_presenting()
