@@ -84,12 +84,12 @@ def plot_signing():
     bbs_blind     = get_measurements("bbs", "blind_signing")
 
     set_plot_theme()
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(5.5, 4.075))
 
-    _plot_line(ax, airbb_signing, COLOR_AIRBB, '-',  r'\textsc{AirBB} issuance')
-    _plot_line(ax, airbb_blind,   COLOR_AIRBB, '--', r'\textsc{AirBB} blind issuance')
-    _plot_line(ax, bbs_signing,   COLOR_BBS,   '-',  r'\textsc{BBS} issuance')
-    _plot_line(ax, bbs_blind,     COLOR_BBS,   '--', r'\textsc{BBS} blind issuance')
+    _plot_line(ax, airbb_signing, COLOR_AIRBB, '-',  r'AirBB issuance')
+    _plot_line(ax, airbb_blind,   COLOR_AIRBB, '--', r'AirBB blind issuance')
+    _plot_line(ax, bbs_signing,   COLOR_BBS,   '-',  r'BBS issuance')
+    _plot_line(ax, bbs_blind,     COLOR_BBS,   '--', r'BBS blind issuance')
 
     ax.set_xlabel('Number of attributes')
     ax.set_ylabel('Time (ms)')
@@ -111,12 +111,12 @@ def plot_presenting():
     bbs_verify_present     = get_measurements("bbs", "verify_present")
 
     set_plot_theme()
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(5.5, 4.075))
 
-    _plot_line(ax, airbb_present, COLOR_AIRBB, '-',  r'\textsc{AirBB} present')
-    _plot_line(ax, airbb_verify_present,   COLOR_AIRBB, '--', r'\textsc{AirBB} verify')
-    _plot_line(ax, bbs_present,   COLOR_BBS,   '-',  r'\textsc{BBS} present')
-    _plot_line(ax, bbs_verify_present,     COLOR_BBS,   '--', r'\textsc{BBS} verify')
+    _plot_line(ax, airbb_present, COLOR_AIRBB, '-',  r'AirBB present')
+    _plot_line(ax, airbb_verify_present,   COLOR_AIRBB, '--', r'AirBB verify')
+    _plot_line(ax, bbs_present,   COLOR_BBS,   '-',  r'BBS present')
+    _plot_line(ax, bbs_verify_present,     COLOR_BBS,   '--', r'BBS verify')
 
     ax.set_xlabel('Number of attributes')
     ax.set_ylabel('Time (ms)')
