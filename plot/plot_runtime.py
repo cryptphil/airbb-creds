@@ -93,9 +93,6 @@ def plot_signing():
 
     ax.set_xlabel('Number of attributes')
     ax.set_ylabel('Time (ms)')
-    # ax.set_xscale('log')
-    # ax.set_yscale('log')
-    # ax.set_xticks(range(0, 101, 25))  # 0, 5, 10, 15, ..., 100
     ax.set_ylim(top=5)
     ax.legend(fontsize=11, loc='upper left')
     ax.grid(True, which='both', linestyle=':', linewidth=0.5, alpha=0.7)
@@ -120,9 +117,6 @@ def plot_presenting():
 
     ax.set_xlabel('Number of attributes')
     ax.set_ylabel('Time (ms)')
-    # ax.set_xscale('log')
-    # ax.set_yscale('log')
-    # ax.set_xticks(range(0, 101, 25))  # 0, 5, 10, 15, ..., 100
     ax.set_ylim(top=5)
     ax.legend(fontsize=11)
     ax.grid(True, which='both', linestyle=':', linewidth=0.5, alpha=0.7)
@@ -135,6 +129,8 @@ def plot_presenting():
 # ---------------------------------------------------------------------------
 
 if __name__ == '__main__':
+    # Uncomment to refresh runtimes.json from the latest criterion output
+    # before regenerating the plots.
     # update_runtimes_from_criterion()
     plot_signing()
     plot_presenting()
