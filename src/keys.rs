@@ -111,14 +111,15 @@ pub fn lagrange_coefficient(indices: &[usize], i: usize) -> Fr {
     );
 
     let x_i = Fr::from(i as u64);
-    indices
+    let (numerator, denominator) = indices
         .iter()
         .copied()
         .filter(|&j| j != i)
-        .fold(Fr::from(1u64), |coefficient, j| {
+        .fold((Fr::from(1u64), Fr::from(1u64)), |(numerator, denominator), j| {
             let x_j = Fr::from(j as u64);
-            coefficient * x_j * (x_j - x_i).inverse().unwrap()
-        })
+            (numerator * x_j, denominator * (x_j - x_i))
+        });
+    numerator * denominator.inverse().unwrap()
 }
 
 #[cfg(test)]
