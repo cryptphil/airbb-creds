@@ -33,11 +33,11 @@ All benchmarks below were run on a MacBook Pro with an Apple M3 Max chip and 36 
 
 | Attributes | AirBB issuance | BBS issuance | AirBB blind issuance | BBS blind issuance | AirBB presentation verification | BBS presentation verification |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 0.515 ms | 0.379 ms | 1.873 ms | 0.440 ms | 3.184 ms | 1.435 ms |
-| 10 | 0.622 ms | 0.466 ms | 1.962 ms | 0.785 ms | 3.276 ms | 1.529 ms |
-| 25 | 0.675 ms | 0.528 ms | 2.136 ms | 0.972 ms | 3.424 ms | 1.644 ms |
-| 50 | 0.764 ms | 0.614 ms | 2.277 ms | 1.017 ms | 3.531 ms | 1.722 ms |
-| 100 | 0.923 ms | 0.716 ms | 2.471 ms | 1.191 ms | 3.737 ms | 2.023 ms |
+| 1 | 0.521 ms | 0.384 ms | 2.091 ms | 0.433 ms | 3.194 ms | 1.415 ms |
+| 10 | 0.626 ms | 0.475 ms | 2.129 ms | 0.781 ms | 3.294 ms | 1.507 ms |
+| 25 | 0.674 ms | 0.529 ms | 2.275 ms | 0.948 ms | 3.430 ms | 1.646 ms |
+| 50 | 0.773 ms | 0.615 ms | 2.414 ms | 1.021 ms | 3.546 ms | 1.730 ms |
+| 100 | 0.936 ms | 0.720 ms | 2.632 ms | 1.208 ms | 3.830 ms | 1.914 ms |
 
 
 Issuance corresponds to the signing benchmark (`sign`), blind issuance corresponds to the blind signing benchmark (`blind_sign`), and presentation verification corresponds to `verify_present` for a credential with selective disclosure.
@@ -61,15 +61,15 @@ For a presentation with `n` hidden attributes, the proof size is roughly:
 
 The threshold variant adds an aggregation step over the partial signatures.
 The benchmark isolates the aggregation, since partial and blind-partial signing are analogous to the already-benchmarked non-threshold methods and thus have essentially the same cost profile.
-The additional runtime overhead introduced is therefore dominated by aggregation involving Lagrange interpolation.
+Aggregation combines a Lagrange interpolation step over the `t` participating shares with one group scalar multiplication per share; for large `t` the scalar multiplications dominate the cost.
 Presentation and verification remain the same as in the non-threshold setting.
 
 We report the mean aggregation runtime for different threshold parameters `(t, n)` below.
 
 | Threshold `(t, n)` | Aggregation time |
 | --- | ---: |
-| `(2, 3)` | 605.45 µs    |
-| `(3, 5)` | 613.14 µs    |
-| `(5, 8)` | 664.26 µs    |
-| `(10, 15)` | 891.85 µs  |
-| `(100, 150)` | 20.24 ms |
+| `(2, 3)` | 524.90 µs    |
+| `(3, 5)` | 550.40 µs    |
+| `(5, 8)` | 532.90 µs    |
+| `(10, 15)` | 674.50 µs  |
+| `(100, 150)` | 1.63 ms  |
