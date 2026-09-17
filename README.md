@@ -26,11 +26,11 @@ All benchmarks below were run on a MacBook Pro with an Apple M3 Max chip and 36 
 
 | Attributes | AirBB issuance | BBS issuance | AirBB blind issuance | BBS blind issuance | AirBB presentation verification | BBS presentation verification |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 0.525 ms | 0.379 ms | 2.043 ms | 0.440 ms | 3.243 ms | 1.435 ms |
-| 10 | 0.614 ms | 0.466 ms | 2.132 ms | 0.785 ms | 3.324 ms | 1.529 ms |
-| 25 | 0.693 ms | 0.528 ms | 2.271 ms | 0.972 ms | 3.475 ms | 1.644 ms |
-| 50 | 0.788 ms | 0.614 ms | 2.420 ms | 1.017 ms | 3.574 ms | 1.722 ms |
-| 100 | 0.941 ms | 0.716 ms | 2.612 ms | 1.191 ms | 3.778 ms | 2.023 ms |
+| 1 | 0.523 ms | 0.384 ms | 2.022 ms | 0.433 ms | 3.194 ms | 1.415 ms |
+| 10 | 0.603 ms | 0.475 ms | 2.199 ms | 0.781 ms | 3.294 ms | 1.507 ms |
+| 25 | 0.675 ms | 0.529 ms | 2.282 ms | 0.948 ms | 3.430 ms | 1.646 ms |
+| 50 | 0.771 ms | 0.615 ms | 2.462 ms | 1.021 ms | 3.546 ms | 1.730 ms |
+| 100 | 0.940 ms | 0.720 ms | 2.707 ms | 1.208 ms | 3.830 ms | 1.914 ms |
 
 
 Issuance corresponds to the signing benchmark (`sign`), blind issuance corresponds to the blind signing benchmark (`blind_sign`), and presentation verification corresponds to `verify_present` for a credential with selective disclosure.
@@ -53,16 +53,16 @@ For a presentation with `n` hidden attributes, the proof size is roughly:
 ### Threshold aggregation cost
 
 The threshold variant adds an aggregation step over the partial signatures.
-The benchmark isolates the aggregation, since partial and blind-partial signing are analogous to the already-benchmarked non-threshold methods and thus have essentially the same cost profile. 
-The additional runtime overhead introduced is therefore dominated by the Lagrange interpolation step used during aggregation. 
+The benchmark isolates the aggregation, since partial and blind-partial signing are analogous to the already-benchmarked non-threshold methods and thus have essentially the same cost profile.
+Aggregation combines a Lagrange interpolation step over the `t` participating shares with one group scalar multiplication per share; for large `t` the scalar multiplications dominate the cost.
 Presentation and verification remain the same as in the non-threshold setting.
 
 We report the mean aggregation runtime for different threshold parameters `(t, n)` below.
 
 | Threshold `(t, n)` | Aggregation time |
 | --- | ---: |
-| `(2, 3)` | 484.00 µs    |
-| `(3, 5)` | 489.40 µs    |
-| `(5, 8)` | 531.30 µs    |
-| `(10, 15)` | 700.80 µs  |
-| `(100, 150)` | 14.12 ms |
+| `(2, 3)` | 522.58 µs    |
+| `(3, 5)` | 534.38 µs    |
+| `(5, 8)` | 528.69 µs    |
+| `(10, 15)` | 666.17 µs  |
+| `(100, 150)` | 1.63 ms  |
