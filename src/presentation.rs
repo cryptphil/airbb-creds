@@ -63,7 +63,15 @@ pub fn present(
     let a0 = Fr::rand(rng);
     let a1 = Fr::rand(rng);
     let a1_inv = a1.inverse().ok_or(Error::ZeroScalar)?;
-    let (com, com_hid) = open(params, &cred.attributes, &a1, reveal_indices, Some(aux), CommitGroup::G2)?;
+    let (com, com_hid) = open(
+        params,
+        &cred.attributes,
+        &a1,
+        reveal_indices,
+        Some(aux),
+        CommitGroup::G2,
+        CommitGroup::G1,
+    )?;
 
     // Compute σ₁' = σ₁ * h1^{a0·p_M(τ)}}
     let h1msg = commit(params, &cred.attributes, &a0, CommitGroup::G1)?

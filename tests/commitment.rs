@@ -15,7 +15,7 @@ fn test_commit_partial_opening() {
     let a = Fr::rand(&mut rng);
 
     let rev_indices = vec![0, 2];
-    let (c, c_hid) = open(&params, &messages, &a, &rev_indices, None, CommitGroup::G1).unwrap();
+    let (c, c_hid) = open(&params, &messages, &a, &rev_indices, None, CommitGroup::G1, CommitGroup::G1).unwrap();
 
     // Compute p_Rev(x) = ∏_{i ∈ Rev} (x − M[i]) and evaluate it in the h2 exponent
     let rev_messages: Vec<Fr> = rev_indices.iter().map(|&i| messages[i]).collect();
@@ -29,6 +29,36 @@ fn test_commit_partial_opening() {
 }
 
 #[test]
+fn test_commit_partial_opening_g2_hidden() {
+    let mut rng = ark_std::test_rng();
+    let l = 5;
+    let params = PublicParams::setup(l, &mut rng);
+    let messages: Vec<Fr> = (0..l).map(|_| Fr::rand(&mut rng)).collect();
+    let a = Fr::rand(&mut rng);
+    let rev_indices = vec![0, 2];
+    let (c, c_hid) = open(
+        &params,
+        &messages,
+        &a,
+        &rev_indices,
+        None,
+        CommitGroup::G1,
+        CommitGroup::G2,
+    )
+    .unwrap();
+    let rev_messages: Vec<Fr> = rev_indices.iter().map(|&i| messages[i]).collect();
+    let c_rev = commit(&params, &rev_messages, &Fr::from(1u64), CommitGroup::G1)
+        .unwrap()
+        .as_g1()
+        .unwrap();
+
+    let lhs = Bls12_381::pairing(c.as_g1().unwrap(), params.g2);
+    let rhs = Bls12_381::pairing(c_rev, c_hid.as_g2().unwrap());
+
+    assert_eq!(lhs, rhs, "G2-hidden opening pairing check failed");
+}
+
+#[test]
 fn test_commit_reveal_all() {
     let mut rng = ark_std::test_rng();
     let l = 3;
@@ -38,7 +68,7 @@ fn test_commit_reveal_all() {
     let a = Fr::rand(&mut rng);
 
     let rev_indices: Vec<usize> = (0..l).collect(); // reveal everything
-    let (c, c_hid) = open(&params, &messages, &a, &rev_indices, None, CommitGroup::G1).unwrap();
+    let (c, c_hid) = open(&params, &messages, &a, &rev_indices, None, CommitGroup::G1, CommitGroup::G1).unwrap();
 
     let rev_messages: Vec<Fr> = rev_indices.iter().map(|&i| messages[i]).collect();
     let h2_p_rev = h2_message_poly(&params, &rev_messages);
@@ -58,7 +88,7 @@ fn test_commit_open_none() {
     let messages: Vec<Fr> = (0..l).map(|_| Fr::rand(&mut rng)).collect();
     let a = Fr::rand(&mut rng);
 
-    let (c, c_hid) = open(&params, &messages, &a, &[], None, CommitGroup::G1).unwrap();
+    let (c, c_hid) = open(&params, &messages, &a, &[], None, CommitGroup::G1, CommitGroup::G1).unwrap();
 
     // p_Rev = empty product = 1, so h2^{p_Rev(τ)} = h2^1 = h2
     let h2_p_rev = h2_message_poly(&params, &Vec::<Fr>::new());

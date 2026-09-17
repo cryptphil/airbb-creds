@@ -19,4 +19,10 @@ pub enum Error {
     MsmFailed,
     #[error("scalar is zero and has no inverse")]
     ZeroScalar,
+    #[error("cannot aggregate an empty set of partial signatures")]
+    EmptyPartialSignatures,
+    #[error("partial signature index {index} is invalid")]
+    InvalidShareIndex { index: usize },
+    #[error("partial signature index {index} is duplicated")]
+    DuplicateShareIndex { index: usize },
 }

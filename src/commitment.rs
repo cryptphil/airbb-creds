@@ -6,7 +6,7 @@ use crate::error::Error;
 use crate::params::PublicParams;
 
 /// Specifies which group to commit in.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum CommitGroup { G1, G2 }
 
 impl std::fmt::Display for CommitGroup {
@@ -40,8 +40,8 @@ impl Commitment {
 /// Commit to the full message set `messages` with randomness `a` in the chosen group.
 ///
 /// Computes p_M(x) = ∏_{i} (x − M[i]), then evaluates it at τ in the exponent:
-/// - `CommitGroup::G1` → `C = h1^{a · p_M(τ)}` using `params.h1_tau`
-/// - `CommitGroup::G2` → `C = h2^{a · p_M(τ)}` using `params.h2_tau`
+/// - `CommitGroup::G1` -> `C = h1^{a · p_M(τ)}` using `params.h1_tau`
+/// - `CommitGroup::G2` -> `C = h2^{a · p_M(τ)}` using `params.h2_tau`
 pub fn commit(params: &PublicParams, messages: &[Fr], a: &Fr, group: CommitGroup) -> Result<Commitment, Error> {
     if messages.len() > params.l {
         return Err(Error::TooManyMessages {
@@ -70,9 +70,9 @@ pub fn commit(params: &PublicParams, messages: &[Fr], a: &Fr, group: CommitGroup
 /// If auxiliary data `aux` is provided, it is added to the hidden commitment.
 ///
 /// Returns `(C, C_hid)` where:
-///   C     = h{1,2}^{r · p_M(τ)}            - full commitment in the specified `group`
-///   C_hid = g1^{(r · p_hid(τ) * (τ - aux)} - hidden commitment (always in G1)
-///   p_hid(x) = ∏_{i ∉ Rev} (x − M[i])
+///   C     = h{1,2}^{r · p_M(τ)}   - full commitment in the specified `group`
+///   C_hid = g{1,2}^{r · p_hid(τ)} - hidden commitment in `hid_group`
+///   p_hid(x) = ∏(x − m)           - for hidden messages and optionally `aux`
 pub fn open(
     params: &PublicParams,
     messages: &[Fr],
@@ -80,6 +80,7 @@ pub fn open(
     rev_indices: &[usize],
     aux: Option<&Fr>,
     group: CommitGroup,
+    hid_group: CommitGroup,
 ) -> Result<(Commitment, Commitment), Error> {
     if messages.len() > params.l {
         return Err(Error::TooManyMessages {
@@ -109,16 +110,26 @@ pub fn open(
     }
 
     let hid_coeffs = roots_to_coeffs(&hid_messages);
+    let c_hid = match hid_group {
+        CommitGroup::G1 => {
     let bases = g1_bases(hid_messages.len(), params);
-    let c_hid_point = G1Projective::msm(&bases, &hid_coeffs)
+            let point = G1Projective::msm(&bases, &hid_coeffs)
         .map_err(|_| Error::MsmFailed)?;
-    let c_hid = Commitment::G1((c_hid_point * r).into_affine());
+            Commitment::G1((point * r).into_affine())
+        }
+        CommitGroup::G2 => {
+            let bases = g2_bases(hid_messages.len(), params);
+            let point = G2Projective::msm(&bases, &hid_coeffs)
+                .map_err(|_| Error::MsmFailed)?;
+            Commitment::G2((point * r).into_affine())
+        }
+    };
 
     Ok((c, c_hid))
 }
 
 
-/// Convert a list of roots into polynomial coefficients (naively in O(k²)).
+/// Convert a list of roots into polynomial coefficients.
 ///
 /// Given roots [m_1, ..., m_k] returns [c_0, c_1, ..., c_k] such that
 ///   p(x) = ∏(x − m_i) = c_0 + c_1·x + … + c_k·x^k
@@ -160,4 +171,9 @@ fn g1_bases(degree: usize, params: &PublicParams) -> Vec<G1Affine> {
         .collect()
 }
 
-
+/// Build [g2, g2_tau[0], ..., g2_tau[degree-1]].
+fn g2_bases(degree: usize, params: &PublicParams) -> Vec<G2Affine> {
+    std::iter::once(params.g2)
+        .chain(params.g2_tau[..degree].iter().copied())
+        .collect()
+}

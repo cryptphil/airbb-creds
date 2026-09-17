@@ -6,6 +6,6 @@ pub mod commitment;
 pub mod presentation;
 
 pub use error::Error;
-pub use keys::{keygen, SecretKey, VerificationKey};
+pub use keys::{keygen, threshold_keygen, KeyShare, SecretKey, VerificationKey};
 pub use params::PublicParams;
 pub use signature::Signature;

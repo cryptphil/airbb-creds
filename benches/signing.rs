@@ -42,7 +42,7 @@ fn bench_blind_signing(c: &mut Criterion) {
             let rev_limit = (l / 2).max(1);
             let rev_indices: Vec<usize> = (0..rev_limit).collect();
             let a = Fr::rand(&mut rng);
-            let (com, com_hid) = open(&setup.params, &setup.messages, &a, &rev_indices, None, CommitGroup::G1)
+            let (com, com_hid) = open(&setup.params, &setup.messages, &a, &rev_indices, None, CommitGroup::G1, CommitGroup::G1)
                 .expect("open failed");
             let rev_messages: Vec<Fr> = rev_indices.iter().map(|&i| setup.messages[i]).collect();
 

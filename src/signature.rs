@@ -1,10 +1,10 @@
 use crate::commitment::{commit, CommitGroup, Commitment};
 use crate::error::Error;
-use crate::keys::{SecretKey, VerificationKey};
+use crate::keys::{lagrange_coefficient, KeyShare, SecretKey, VerificationKey};
 use crate::params::PublicParams;
 use ark_bls12_381::{Bls12_381, Fr, G1Affine, G1Projective};
 use ark_ec::pairing::{Pairing, PairingOutput};
-use ark_ec::CurveGroup;
+use ark_ec::{CurveGroup, VariableBaseMSM};
 use ark_ff::One;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::UniformRand;
@@ -115,6 +115,94 @@ pub fn blind_sign(
 
     let sigma1 = (G1Projective::from(sk.g1_sk) + c * r).into_affine();
     let sigma2 = (G1Projective::from(params.g1) * r).into_affine();
+
+    Ok(Signature { sigma1, sigma2 })
+}
+
+/// Partially sign a set of messages with a threshold key share.
+pub fn partial_sign(
+    params: &PublicParams,
+    share: &KeyShare,
+    messages: &[Fr],
+    rng: &mut impl Rng,
+) -> Result<Signature, Error> {
+    let r = Fr::rand(rng);
+    let c = commit(params, messages, &r, CommitGroup::G1)?
+        .as_g1()
+        .expect("committed with CommitGroup::G1");
+
+    let sigma1 = (G1Projective::from(share.g1_sk_i) + c).into_affine();
+    let sigma2 = (G1Projective::from(params.g1) * r).into_affine();
+
+    Ok(Signature { sigma1, sigma2 })
+}
+
+/// Partially blind-sign a committed message set with a threshold key share.
+///
+/// The hidden commitment is in G2. The opening check is
+/// `e(C, g2) == e(C_rev, C_hid)`, where `C_rev = h1^{p_rev(τ)}`.
+pub fn blind_partial_sign(
+    params: &PublicParams,
+    share: &KeyShare,
+    com: &Commitment,
+    com_hid: &Commitment,
+    rev_messages: &[Fr],
+    rng: &mut impl Rng,
+) -> Result<Signature, Error> {
+    let c = com.as_g1().ok_or(Error::CommitmentWrongGroup {
+        exp_group: CommitGroup::G1,
+    })?;
+    let c_hid = com_hid.as_g2().ok_or(Error::CommitmentWrongGroup {
+        exp_group: CommitGroup::G2,
+    })?;
+
+    let c_rev = commit(params, rev_messages, &Fr::one(), CommitGroup::G1)?
+        .as_g1()
+        .expect("committed with CommitGroup::G1");
+    let lhs: PairingOutput<Bls12_381> = Bls12_381::pairing(c, params.g2);
+    let rhs: PairingOutput<Bls12_381> = Bls12_381::pairing(c_rev, c_hid);
+    if lhs != rhs {
+        return Err(Error::InvalidCommitmentOpeningBlindSign);
+    }
+
+    let r = Fr::rand(rng);
+    let sigma1 = (G1Projective::from(share.g1_sk_i) + c * r).into_affine();
+    let sigma2 = (G1Projective::from(params.g1) * r).into_affine();
+
+    Ok(Signature { sigma1, sigma2 })
+}
+
+/// Combine partial signatures by Lagrange interpolation in the exponent.
+///
+/// Participating indices must be unique and starting from 1.
+pub fn aggregate(shares: &[(usize, Signature)]) -> Result<Signature, Error> {
+    if shares.is_empty() {
+        return Err(Error::EmptyPartialSignatures);
+    }
+
+    let mut indices = Vec::with_capacity(shares.len());
+    for (index, _) in shares {
+        if *index == 0 {
+            return Err(Error::InvalidShareIndex { index: *index });
+        }
+        if indices.contains(index) {
+            return Err(Error::DuplicateShareIndex { index: *index });
+        }
+        indices.push(*index);
+    }
+
+    let scalars: Vec<Fr> = indices
+        .iter()
+        .map(|&index| lagrange_coefficient(&indices, index))
+        .collect();
+    let sigma1_bases: Vec<G1Affine> = shares.iter().map(|(_, sig)| sig.sigma1).collect();
+    let sigma2_bases: Vec<G1Affine> = shares.iter().map(|(_, sig)| sig.sigma2).collect();
+    let sigma1 = G1Projective::msm(&sigma1_bases, &scalars)
+        .map_err(|_| Error::MsmFailed)?
+        .into_affine();
+    let sigma2 = G1Projective::msm(&sigma2_bases, &scalars)
+        .map_err(|_| Error::MsmFailed)?
+        .into_affine();
 
     Ok(Signature { sigma1, sigma2 })
 }

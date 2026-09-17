@@ -28,6 +28,8 @@ pub struct PublicParams {
     pub g1_tau: Vec<G1Affine>,
     /// `[h2^τ, h2^{τ²}, ..., h2^{τ^l}]`
     pub h2_tau: Vec<G2Affine>,
+    /// `[g2^τ, g2^{τ²}, ..., g2^{τ^l}]`
+    pub g2_tau: Vec<G2Affine>,
     /// `[h1^τ, h1^{τ²}, ..., h1^{τ^l}]`
     pub h1_tau: Vec<G1Affine>
 }
@@ -49,12 +51,14 @@ impl PublicParams {
         let mut g1_tau =  Vec::<G1Affine>::with_capacity(l + 1);
         let mut h1_tau =  Vec::<G1Affine>::with_capacity(l);
         let mut h2_tau =  Vec::<G2Affine>::with_capacity(l);
+        let mut g2_tau = Vec::<G2Affine>::with_capacity(l);
 
         for i in 1u64..= l as u64 {
             let tau_pow = tau.pow([i]);
             g1_tau.push((G1Projective::from(g1) * tau_pow).into_affine());
             h1_tau.push((G1Projective::from(h1) * tau_pow).into_affine());
             h2_tau.push((G2Projective::from(h2) * tau_pow).into_affine());
+            g2_tau.push((G2Projective::from(g2) * tau_pow).into_affine());
         }
         // g1_tau needs one extra power (τ^{l+1}).
         g1_tau.push((G1Projective::from(g1) * tau.pow([l as u64 + 1])).into_affine());
@@ -67,7 +71,8 @@ impl PublicParams {
             h2,
             g1_tau,
             h1_tau,
-            h2_tau
+            h2_tau,
+            g2_tau
         }
     }
 }
