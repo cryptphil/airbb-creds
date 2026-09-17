@@ -26,11 +26,11 @@ All benchmarks below were run on a MacBook Pro with an Apple M3 Max chip and 36 
 
 | Attributes | AirBB issuance | BBS issuance | AirBB blind issuance | BBS blind issuance | AirBB presentation verification | BBS presentation verification |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 0.515 ms | 0.379 ms | 1.873 ms | 0.440 ms | 3.184 ms | 1.435 ms |
-| 10 | 0.622 ms | 0.466 ms | 1.962 ms | 0.785 ms | 3.276 ms | 1.529 ms |
-| 25 | 0.675 ms | 0.528 ms | 2.136 ms | 0.972 ms | 3.424 ms | 1.644 ms |
-| 50 | 0.764 ms | 0.614 ms | 2.277 ms | 1.017 ms | 3.531 ms | 1.722 ms |
-| 100 | 0.923 ms | 0.716 ms | 2.471 ms | 1.191 ms | 3.737 ms | 2.023 ms |
+| 1 | 0.525 ms | 0.379 ms | 2.043 ms | 0.440 ms | 3.243 ms | 1.435 ms |
+| 10 | 0.614 ms | 0.466 ms | 2.132 ms | 0.785 ms | 3.324 ms | 1.529 ms |
+| 25 | 0.693 ms | 0.528 ms | 2.271 ms | 0.972 ms | 3.475 ms | 1.644 ms |
+| 50 | 0.788 ms | 0.614 ms | 2.420 ms | 1.017 ms | 3.574 ms | 1.722 ms |
+| 100 | 0.941 ms | 0.716 ms | 2.612 ms | 1.191 ms | 3.778 ms | 2.023 ms |
 
 
 Issuance corresponds to the signing benchmark (`sign`), blind issuance corresponds to the blind signing benchmark (`blind_sign`), and presentation verification corresponds to `verify_present` for a credential with selective disclosure.
@@ -61,8 +61,8 @@ We report the mean aggregation runtime for different threshold parameters `(t, n
 
 | Threshold `(t, n)` | Aggregation time |
 | --- | ---: |
-| `(2, 3)` | 605.45 µs    |
-| `(3, 5)` | 613.14 µs    |
-| `(5, 8)` | 664.26 µs    |
-| `(10, 15)` | 891.85 µs  |
-| `(100, 150)` | 20.24 ms |
+| `(2, 3)` | 484.00 µs    |
+| `(3, 5)` | 489.40 µs    |
+| `(5, 8)` | 531.30 µs    |
+| `(10, 15)` | 700.80 µs  |
+| `(100, 150)` | 14.12 ms |
