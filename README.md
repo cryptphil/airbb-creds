@@ -40,7 +40,7 @@ All benchmarks below were run on a MacBook Pro with an Apple M3 Max chip and 36 
 | 100 | 0.930 ms | 0.718 ms | 2.058 ms | 1.199 ms | 2.449 ms | 1.910 ms |
 
 
-Issuance corresponds to the signing benchmark (`sign`), blind issuance corresponds to the blind signing benchmark (`blind_sign`), and presentation verification corresponds to `verify_present` for a credential with selective disclosure.
+Issuance corresponds to the signing benchmark (`sign`), blind issuance corresponds to the blind signing benchmark (`blind_sign`), and presentation verification corresponds to `verify_present` for a credential while selectively revealing half of the attributes.
 
 ### Presentation size comparison
 
