@@ -2,7 +2,7 @@
 
 This repository implements a Rust prototype of the "AirBB: Lightweight Threshold Anonymous Credentials without Random Oracles from BB Signatures" paper, including tests and benchmarks.
 
-Builds on the [arkworks](https://github.com/arkworks-rs/algebra) BLS12-381 elliptic curve implementation and uses Criterion for benchmarks. After running the benchmarks, you can find the results in the `target/criterion` directory.
+Builds on the [arkworks](https://github.com/arkworks-rs/algebra) BLS12-381 elliptic curve implementation and uses Criterion for benchmarks. After running the benchmarks, the results are written in the `target/criterion` directory.
 The benchmarks include non-blind and blind signing (issuance), presentation, verification, and (for the threshold variant) partial-signature aggregation.
 For a comparison, the benchmarks additionally cover the BBS signature scheme from the [docknetwork/crypto](https://github.com/docknetwork/crypto) library.
 
@@ -11,10 +11,10 @@ For a comparison, the benchmarks additionally cover the BBS signature scheme fro
 ```bash
 cargo test                               # Run all tests
 cargo bench                              # Run all benchmarks
-cargo bench --bench signing              # Only run signing benchmarks of our scheme
-cargo bench --bench presentation present # Only run credential presentation benchmarks of our scheme
+cargo bench --bench signing              # Only run signing benchmarks
+cargo bench --bench presentation present # Only run credential presentation benchmarks
 cargo bench --bench threshold            # Only run threshold aggregation benchmarks
-cargo bench --bench bbs                  # Only run benchmarks for the BBS signature scheme
+cargo bench --bench bbs                  # Only run benchmarks for BBS
 ```
 
 ## Benchmark Report
@@ -33,14 +33,14 @@ All benchmarks below were run on a MacBook Pro with an Apple M3 Max chip and 36 
 | 100 | 0.923 ms | 0.716 ms | 2.471 ms | 1.191 ms | 3.737 ms | 2.023 ms |
 
 
-**Note**: Issuance corresponds to the signing benchmark (`sign`), blind issuance corresponds to the blind signing benchmark (`blind_sign`), and presentation verification corresponds to `verify_present` for a credential with selective disclosure.
+Issuance corresponds to the signing benchmark (`sign`), blind issuance corresponds to the blind signing benchmark (`blind_sign`), and presentation verification corresponds to `verify_present` for a credential with selective disclosure.
 
 ### Presentation size comparison
 
 For a presentation with `n` hidden attributes, the proof size is roughly:
 
 - BBS: `2 * G1 + (3 + n) * F = 96 + (3 + n) * 32` bytes
-- AirBB: constant-size proof, approximately `3 * G1 + G2 = 240` bytes
+- AirBB: Constant-size with `3 * G1 + G2 = 240` bytes
 
 | Hidden attributes | AirBB | BBS |
 | --- | ---: | ---: |
