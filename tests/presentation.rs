@@ -1,6 +1,7 @@
+use airbnb_creds::commitment::{open, CommitGroup};
 use airbnb_creds::keys::keygen;
 use airbnb_creds::presentation::{present, verify_present, verify_present_optimized, Credential, Presentation};
-use airbnb_creds::signature::sign;
+use airbnb_creds::signature::{blind_sign, sign, unblind};
 use airbnb_creds::PublicParams;
 use ark_bls12_381::Fr;
 use ark_std::UniformRand;
@@ -25,6 +26,56 @@ fn test_present_sel_reveal() {
 
     assert!(result, "selectively-revealed presentation should verify");
     assert!(result_opt, "selectively-revealed presentation should verify (optimized)");
+}
+
+#[test]
+fn blind_issued_credential_presentation_verifies() {
+    let mut rng = ark_std::test_rng();
+    let l = 10;
+    let params = PublicParams::setup(l, &mut rng);
+    let (sk, vk) = keygen(&params, &mut rng);
+    let attributes: Vec<Fr> = (0..l).map(|_| Fr::rand(&mut rng)).collect();
+
+    let a = Fr::rand(&mut rng);
+    let issuer_reveal_indices = vec![0, 2];
+    let (com, com_hid) = open(
+        &params,
+        &attributes,
+        &a,
+        &issuer_reveal_indices,
+        None,
+        CommitGroup::G1,
+    )
+    .expect("opening failed");
+    let revealed_to_issuer: Vec<Fr> = issuer_reveal_indices
+        .iter()
+        .map(|&i| attributes[i])
+        .collect();
+    let blind_sig = blind_sign(
+        &params,
+        &sk,
+        &com,
+        &com_hid,
+        &revealed_to_issuer,
+        &mut rng,
+    )
+    .expect("blind signing failed");
+    let cred = Credential::new(unblind(&blind_sig, &a), attributes);
+
+    let reveal_indices = vec![1, 3, 5];
+    let aux = Fr::rand(&mut rng);
+    let presentation = present(&params, &cred, &reveal_indices, &aux, &mut rng)
+        .expect("presentation failed");
+
+    assert!(
+        verify_present(&params, &vk, &presentation).expect("verification failed"),
+        "presentation of a blind-issued credential should verify"
+    );
+    assert!(
+        verify_present_optimized(&params, &vk, &presentation, &mut rng)
+            .expect("optimized verification failed"),
+        "optimized presentation verification should succeed for a blind-issued credential"
+    );
 }
 
 #[test]

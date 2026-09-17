@@ -1,5 +1,5 @@
 use airbnb_creds::commitment::{open, CommitGroup};
-use airbnb_creds::signature::{blind_sign, sign, verify};
+use airbnb_creds::signature::{blind_sign, sign, unblind, verify};
 use airbnb_creds::Error;
 use airbnb_creds::{keygen, PublicParams};
 use ark_bls12_381::Fr;
@@ -59,20 +59,52 @@ fn wrong_key_signature_fails() {
 }
 
 #[test]
-fn blind_sign_honest_opening_succeeds() {
+fn blind_issued_signature_unblinds_verifies() {
     let mut rng = ark_std::test_rng();
     let l = 5;
     let params = PublicParams::setup(l, &mut rng);
     let messages: Vec<Fr> = (0..l).map(|_| Fr::rand(&mut rng)).collect();
-    let (sk, _vk) = keygen(&params, &mut rng);
+    let (sk, vk) = keygen(&params, &mut rng);
 
     let a = Fr::rand(&mut rng);
     let rev_indices = vec![0, 2];
-    let (com, com_hid) = open(&params, &messages, &a, &rev_indices, None, CommitGroup::G1).unwrap();
+    let (com, com_hid) = open(&params, &messages, &a, &rev_indices, None, CommitGroup::G1)
+        .expect("opening failed");
     let rev_messages: Vec<Fr> = rev_indices.iter().map(|&i| messages[i]).collect();
 
-    let result = blind_sign(&params, &sk, &com, &com_hid, &rev_messages, &mut rng);
-    assert!(result.is_ok(), "blind sign failed: {:?}", result.err());
+    let blind_sig = blind_sign(&params, &sk, &com, &com_hid, &rev_messages, &mut rng)
+        .expect("blind signing failed");
+    let sig = unblind(&blind_sig, &a);
+
+    assert!(
+        verify(&params, &vk, &messages, &sig).expect("verification failed"),
+        "unblinded blind-issued signature should verify"
+    );
+}
+
+#[test]
+fn blind_issued_signature_wrong_unblinding_fails() {
+    let mut rng = ark_std::test_rng();
+    let l = 5;
+    let params = PublicParams::setup(l, &mut rng);
+    let messages: Vec<Fr> = (0..l).map(|_| Fr::rand(&mut rng)).collect();
+    let (sk, vk) = keygen(&params, &mut rng);
+
+    let a = Fr::rand(&mut rng);
+    let rev_indices = vec![0, 2];
+    let (com, com_hid) = open(&params, &messages, &a, &rev_indices, None, CommitGroup::G1)
+        .expect("opening failed");
+    let rev_messages: Vec<Fr> = rev_indices.iter().map(|&i| messages[i]).collect();
+
+    let blind_sig = blind_sign(&params, &sk, &com, &com_hid, &rev_messages, &mut rng)
+        .expect("blind signing failed");
+    let wrong_a = a + Fr::from(1u64);
+    let sig = unblind(&blind_sig, &wrong_a);
+
+    assert!(
+        !verify(&params, &vk, &messages, &sig).expect("verification failed"),
+        "signature unblinded with a wrong scalar should not verify"
+    );
 }
 
 #[test]

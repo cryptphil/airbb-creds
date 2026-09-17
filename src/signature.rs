@@ -113,10 +113,23 @@ pub fn blind_sign(
 
     let r = Fr::rand(rng);
 
-    let sigma1 = (G1Projective::from(sk.g1_sk) + c).into_affine();
+    let sigma1 = (G1Projective::from(sk.g1_sk) + c * r).into_affine();
     let sigma2 = (G1Projective::from(params.g1) * r).into_affine();
 
     Ok(Signature { sigma1, sigma2 })
+}
+
+/// Unblind a signature obtained from [`blind_sign`], given the blinding scalar `a`.
+///
+/// ```text
+/// σ₁ = σ₁'
+/// σ₂ = (σ₂')^a
+/// ```
+pub fn unblind(sig: &Signature, a: &Fr) -> Signature {
+    Signature {
+        sigma1: sig.sigma1,
+        sigma2: (G1Projective::from(sig.sigma2) * a).into_affine(),
+    }
 }
 
 /// Verify a signature (σ₁, σ₂) against `vk` and a message set.

@@ -35,8 +35,8 @@ pub struct Presentation {
 
 /// Creates a credential presentation while selectively revealing the subset of attributes at `rev_indices`.
 ///
-/// `aux` is auxiliary data agreed upon out-of-band between holder and verifier (e.g. a nonce or
-/// session context). It is bound into C_hid, preventing the presentation from being replayed for
+/// `aux` is auxiliary data agreed upon out-of-band between holder and verifier (e.g. the verifier identity, 
+//  a nonce, or session context). It is bound into C_hid, preventing the presentation from being replayed for
 /// a different `aux`.
 ///
 /// # Presentation Protocol
