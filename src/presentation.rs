@@ -129,11 +129,14 @@ pub fn verify_present_optimized(params: &PublicParams, vk: &VerificationKey, pre
     let com_hid = presentation.com_hid.as_g1().ok_or(Error::CommitmentWrongGroup { exp_group: CommitGroup::G1 })?;
 
     // Check e(σ₁', g2) * e(C_hid, h2^{p_{M_rev}(τ)})^γ = vk · e(σ₂' * g1^((τ-aux)*γ), C)
-    let lhs_sig: PairingOutput<Bls12_381> = Bls12_381::pairing(presentation.sig.sigma1, params.g2);
-    let lhs_com: PairingOutput<Bls12_381> = Bls12_381::pairing(com_hid, rev_h2) * gamma;
-    let lhs = lhs_sig + lhs_com;
-    let rhs = PairingOutput::<Bls12_381>(vk.0) +
-        Bls12_381::pairing(presentation.sig.sigma2 + aux_g1, com);
+    let check = Bls12_381::multi_pairing(
+        [
+            presentation.sig.sigma1,
+            (com_hid * gamma).into_affine(),
+            (-(presentation.sig.sigma2 + aux_g1)).into_affine(),
+        ],
+        [params.g2, rev_h2, com],
+    );
 
-    Ok(lhs == rhs)
+    Ok(check == PairingOutput::<Bls12_381>(vk.0))
 }

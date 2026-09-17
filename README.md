@@ -33,11 +33,11 @@ All benchmarks below were run on a MacBook Pro with an Apple M3 Max chip and 36 
 
 | Attributes | AirBB issuance | BBS issuance | AirBB blind issuance | BBS blind issuance | AirBB presentation verification | BBS presentation verification |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 0.521 ms | 0.384 ms | 2.091 ms | 0.433 ms | 3.194 ms | 1.415 ms |
-| 10 | 0.626 ms | 0.475 ms | 2.129 ms | 0.781 ms | 3.294 ms | 1.507 ms |
-| 25 | 0.674 ms | 0.529 ms | 2.275 ms | 0.948 ms | 3.430 ms | 1.646 ms |
-| 50 | 0.773 ms | 0.615 ms | 2.414 ms | 1.021 ms | 3.546 ms | 1.730 ms |
-| 100 | 0.936 ms | 0.720 ms | 2.632 ms | 1.208 ms | 3.830 ms | 1.914 ms |
+| 1 | 0.512 ms | 0.377 ms | 1.476 ms | 0.431 ms | 1.818 ms | 1.410 ms |
+| 10 | 0.602 ms | 0.473 ms | 1.563 ms | 0.781 ms | 1.912 ms | 1.512 ms |
+| 25 | 0.663 ms | 0.530 ms | 1.709 ms | 0.947 ms | 2.057 ms | 1.642 ms |
+| 50 | 0.799 ms | 0.614 ms | 1.836 ms | 1.019 ms | 2.177 ms | 1.729 ms |
+| 100 | 0.930 ms | 0.718 ms | 2.058 ms | 1.199 ms | 2.449 ms | 1.910 ms |
 
 
 Issuance corresponds to the signing benchmark (`sign`), blind issuance corresponds to the blind signing benchmark (`blind_sign`), and presentation verification corresponds to `verify_present` for a credential with selective disclosure.
