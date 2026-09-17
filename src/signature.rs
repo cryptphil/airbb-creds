@@ -5,7 +5,7 @@ use crate::params::PublicParams;
 use ark_bls12_381::{Bls12_381, Fr, G1Affine, G1Projective};
 use ark_ec::pairing::{Pairing, PairingOutput};
 use ark_ec::{CurveGroup, VariableBaseMSM};
-use ark_ff::One;
+use ark_ff::{One, Zero};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::UniformRand;
 use rand::Rng;
@@ -105,9 +105,8 @@ pub fn blind_sign(
     let c_rev = commit(params, rev_messages, &Fr::one(), CommitGroup::G2)?.as_g2().unwrap();
 
     // e(C, g2) == e(C_hid, C_rev)
-    let lhs: PairingOutput<Bls12_381> = Bls12_381::pairing(c, params.g2);
-    let rhs: PairingOutput<Bls12_381> = Bls12_381::pairing(c_hid, c_rev);
-    if lhs != rhs {
+    let check = Bls12_381::multi_pairing([c, -c_hid], [params.g2, c_rev]);
+    if check != PairingOutput::zero() {
         return Err(Error::InvalidCommitmentOpeningBlindSign)
     }
 
@@ -159,9 +158,8 @@ pub fn blind_partial_sign(
     let c_rev = commit(params, rev_messages, &Fr::one(), CommitGroup::G1)?
         .as_g1()
         .expect("committed with CommitGroup::G1");
-    let lhs: PairingOutput<Bls12_381> = Bls12_381::pairing(c, params.g2);
-    let rhs: PairingOutput<Bls12_381> = Bls12_381::pairing(c_rev, c_hid);
-    if lhs != rhs {
+    let check = Bls12_381::multi_pairing([c, -c_rev], [params.g2, c_hid]);
+    if check != PairingOutput::zero() {
         return Err(Error::InvalidCommitmentOpeningBlindSign);
     }
 
@@ -238,10 +236,7 @@ pub fn verify(
     }
 
     let c = commit(params, messages, &Fr::one(), CommitGroup::G2)?.as_g2().unwrap();
-    let lhs: PairingOutput<Bls12_381> = Bls12_381::pairing(sig.sigma1, params.g2);
-    let rhs = PairingOutput::<Bls12_381>(vk.0) +
-        Bls12_381::pairing(sig.sigma2, c);
+    let check = Bls12_381::multi_pairing([sig.sigma1, -sig.sigma2], [params.g2, c]);
 
-
-    Ok(lhs == rhs)
+    Ok(check == PairingOutput::<Bls12_381>(vk.0))
 }
