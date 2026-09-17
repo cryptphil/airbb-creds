@@ -2,15 +2,19 @@
 
 This repository implements a Rust prototype of the "AirBB: Lightweight Threshold Anonymous Credentials without Random Oracles from BB Signatures" paper, including tests and benchmarks.
 
-It is built on the [arkworks](https://github.com/arkworks-rs/algebra) BLS12-381 implementation and uses Criterion for performance benchmarks.
+Builds on the [arkworks](https://github.com/arkworks-rs/algebra) BLS12-381 elliptic curve implementation and uses Criterion for benchmarks. After running the benchmarks, you can find the results in the `target/criterion` directory.
+The benchmarks include non-blind and blind signing (issuance), presentation, verification, and (for the threshold variant) partial-signature aggregation.
+For a comparison, the benchmarks additionally cover the BBS signature scheme from the [docknetwork/crypto](https://github.com/docknetwork/crypto) library.
 
 ## Getting Started
 
 ```bash
-cargo test                     # Run the full test suite
-cargo bench                    # Run all benchmarks
-cargo bench --bench presentation  # Only run presentation benchmarks
-cargo bench --bench threshold   # Only run threshold aggregation benchmarks
+cargo test                               # Run all tests
+cargo bench                              # Run all benchmarks
+cargo bench --bench signing              # Only run signing benchmarks of our scheme
+cargo bench --bench presentation present # Only run credential presentation benchmarks of our scheme
+cargo bench --bench threshold            # Only run threshold aggregation benchmarks
+cargo bench --bench bbs                  # Only run benchmarks for the BBS signature scheme
 ```
 
 ## Benchmark Report
